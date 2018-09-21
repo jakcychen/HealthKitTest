@@ -34,16 +34,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let _ = AppDelegate.database!.createTable(
                 AppDelegate.DB_TABLE_1,
                 columnsInfo: [
-                    "DATE TEXT PRIMARY KEY",
+                    "DATE TEXT",
                     "STEP TEXT",
+                    "FETCH_TIME TEXT"
                 ]
             )
             
             let _ = AppDelegate.database!.createTable(
                 AppDelegate.DB_TABLE_2,
                 columnsInfo: [
-                    "DATE TEXT PRIMARY KEY",
+                    "DATE TEXT",
                     "STEP TEXT",
+                    "FETCH_TIME TEXT"
                 ]
             )
         }

@@ -47,7 +47,7 @@ class SQLiteManager {
     // insert data into table
     func insert(_ tableName: String, rowInfo: [String: String]) -> Int32 {
         
-        let sqlCmd: String = "insert or replace into \(tableName) "
+        let sqlCmd: String = "insert into \(tableName) "
             + "(\(rowInfo.keys.joined(separator: ","))) "
             + "values (\(rowInfo.values.joined(separator: ",")))"
         
@@ -68,7 +68,7 @@ class SQLiteManager {
     // read data from table
     func readData(tableName: String)  -> [StepModel] {
         
-        let sqlCmd: String = "SELECT * FROM \(tableName) ORDER BY DATE DESC"
+        let sqlCmd: String = "SELECT * FROM \(tableName) ORDER BY DATE DESC, FETCH_TIME DESC"
         var statement: OpaquePointer? = nil
         var dbStatus: Int32 = SQLITE_ERROR
         dbStatus = sqlite3_prepare_v2(self.dbPtr, String(sqlCmd), -1, &statement, nil)
@@ -77,10 +77,16 @@ class SQLiteManager {
         }
         var resultArray: [StepModel] = []
         while sqlite3_step(statement) == SQLITE_ROW {
+
             let a = String(cString: sqlite3_column_text(statement, 0))
             let healthModel = StepModel(date: a)
+            
             let b = String(cString: sqlite3_column_text(statement, 1))
-            healthModel.STEP = b
+            healthModel.step = b
+            
+            let c = String(cString: sqlite3_column_text(statement, 2))
+            healthModel.fetchTime = c
+
             resultArray.append(healthModel)
         }
         sqlite3_finalize(statement)

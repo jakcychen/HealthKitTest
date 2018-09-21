@@ -10,14 +10,22 @@ import UIKit
 
 class DataDetailVC: UIViewController {
     @IBOutlet weak var tableView: UITableView!
-    var tile: String!
+    var dataDate: String!
+    var dataFetchTime: String!
+    
     var datas: [StepModel]!
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        print("\(self.dataDate) - \(self.dataFetchTime)")
+        
+        
+        self.title = self.dataDate!
+        
         var temp: [StepModel] = []
         for data in AppDelegate.database.readData(tableName: AppDelegate.DB_TABLE_2) {
-            if data.DATE.contains(self.title!) {
+            if data.date.contains(self.dataDate!) && data.fetchTime.contains(self.dataFetchTime!) {
                 temp.append(data)
             }
         }
@@ -36,8 +44,9 @@ extension DataDetailVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell")
-        cell?.textLabel?.text = self.datas[indexPath.row].STEP
-        cell?.detailTextLabel?.text = self.datas[indexPath.row].DATE
+        cell?.textLabel?.text = "\(self.datas[indexPath.row].step) (\(self.datas[indexPath.row].date))"
+        cell?.detailTextLabel?.text = "Fetch: \(self.datas[indexPath.row].fetchTime)"
+        cell?.detailTextLabel?.textColor = UIColor.lightGray
         
         return cell!
     }

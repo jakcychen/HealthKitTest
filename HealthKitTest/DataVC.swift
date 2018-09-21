@@ -21,7 +21,9 @@ class DataVC: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let cell = sender as! UITableViewCell
-        segue.destination.title = cell.detailTextLabel?.text
+        
+        (segue.destination as! DataDetailVC).dataDate = cell.layer.value(forKey: "dataDate") as! String
+        (segue.destination as! DataDetailVC).dataFetchTime = cell.layer.value(forKey: "dataFetchTime") as! String
     }
 }
 
@@ -36,10 +38,12 @@ extension DataVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "stepCell")
-        cell?.textLabel?.text = self.datas[indexPath.row].STEP
-        cell?.detailTextLabel?.text = self.datas[indexPath.row].DATE
-        
-        
+        cell?.textLabel?.text = "Date: \(self.datas[indexPath.row].date) - Step: \(self.datas[indexPath.row].step)"
+        cell?.detailTextLabel?.text = "Fetch: \(self.datas[indexPath.row].fetchTime)"
+        cell?.detailTextLabel?.textColor = UIColor.lightGray
+        cell?.layer.setValue(self.datas[indexPath.row].date, forKey: "dataDate")
+        cell?.layer.setValue(self.datas[indexPath.row].fetchTime, forKey: "dataFetchTime")
+
         return cell!
     }
 }

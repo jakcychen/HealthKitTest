@@ -11,12 +11,13 @@ import HealthKit
 
 class StepModel
 {
-    var DATE: String = ""
-    var STEP: String = "0"
+    var date: String = ""
+    var step: String = "0"
+    var fetchTime: String = ""
     
     init(date: String)
     {
-        self.DATE = date
+        self.date = date
     }
 }
 
@@ -30,6 +31,12 @@ extension HealthKitManager
     static func fetchStepCount(duration: Int, completionHandler: @escaping (Bool) -> ())
     {
         print("fetchStepCount")
+        let fetchTime = Date()
+        let localDateFormatter = DateFormatter()
+        localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
+        localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
+        let fetchTimeString = localDateFormatter.string(from: fetchTime)
         
         //
         let quantityType: HKQuantityType? = HKObjectType.quantityType(
@@ -85,12 +92,7 @@ extension HealthKitManager
             {
                 return
             }
-                        
-            self.fetchStepCountDetail(
-                startDate: startDate.addingTimeInterval(8 * 60 * 60),
-                endDate: endDate.addingTimeInterval(8 * 60 * 60)
-            )
-
+            
             statsCollection.enumerateStatistics(from: startDate, to: endDate)
             {(statistic, stop) in
                 
@@ -103,27 +105,32 @@ extension HealthKitManager
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateString = dateFormatter.string(from: date)
 
+                    print("\(dateString) - \(count) - \(fetchTimeString)")
+                    
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_1,
-                        rowInfo: ["DATE": "'\(dateString)'",
-                                  "STEP": String(Int(count))
+                        rowInfo: [
+                            "DATE": "'\(dateString)'",
+                            "STEP": String(Int(count)),
+                            "FETCH_TIME": "'\(fetchTimeString)'"
                         ]
                     )
-
                 }
             }
             
-            DispatchQueue.main.async
-            {
-                completionHandler(true)
-            }
+            self.fetchStepCountDetail(startDate: startDate.addingTimeInterval(8 * 60 * 60), endDate: endDate.addingTimeInterval(8 * 60 * 60), fetchTimeString: fetchTimeString, completionHandler: completionHandler)
+            
+//            DispatchQueue.main.async
+//            {
+//                completionHandler(true)
+//            }
         }
         
         self.healthStore.execute(query)
     }
     
-    static func fetchStepCountDetail(startDate: Date, endDate: Date) {
-
+    static func fetchStepCountDetail(startDate: Date, endDate: Date, fetchTimeString: String, completionHandler: @escaping (Bool) -> ()) {
+        
         let type = HKSampleType.quantityType(
             forIdentifier: HKQuantityTypeIdentifier.stepCount
         )
@@ -135,16 +142,32 @@ extension HealthKitManager
                 
                 for result in results as! [HKQuantitySample] {
                     
-                    let date = result.endDate.addingTimeInterval(8*60*60)
+                    //let date = result.endDate.addingTimeInterval(8*60*60)
+                    let fetchTime = Date()
+                    let localDateFormatter = DateFormatter()
+                    localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                    localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
+                    localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
+                    let date = localDateFormatter.string(from: result.endDate)
+                    
+                    
+                    
                     let count = result.quantity.doubleValue(for: HKUnit.count())
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_2,
                         rowInfo: [
                             "DATE": "'\(date)'",
-                            "STEP": String(Int(count))
+                            "STEP": String(Int(count)),
+                            "FETCH_TIME": "'\(fetchTimeString)'"
                         ]
                     )
+                    print("\(date) - \(count) - \(fetchTimeString)")
                 }
+            }
+            
+            DispatchQueue.main.async
+            {
+                completionHandler(true)
             }
         }
         
@@ -329,7 +352,7 @@ extension HealthKitManager
         let dispatchGroup = DispatchGroup()
         
         dispatchGroup.enter()
-        self.fetchStepCount(duration: -200) {_ in dispatchGroup.leave() }
+        self.fetchStepCount(duration: -5) {_ in dispatchGroup.leave() }
         
         dispatchGroup.enter()
         self.fetchDistance { dispatchGroup.leave() }
