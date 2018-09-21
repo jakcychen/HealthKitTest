@@ -34,8 +34,8 @@ class FetchVC: UIViewController {
     @IBAction func fetch(_ sender: Any)
     {
         self.fetchButton.setTitle("fetching in progress", for: .normal)
-        self.fetchingView.isHidden = false
         self.fetchingIndicator.startAnimating()
+        self.view.window?.addSubview(self.fetchingView)
         
         HealthKitManager.authorizeHealthKit { (authorized, error) in
             if !authorized  {
@@ -49,8 +49,8 @@ class FetchVC: UIViewController {
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     self.fetchButton.setTitle("fetch", for: .normal)
-                    self.fetchingView.isHidden = true
                     self.fetchingIndicator.stopAnimating()
+                    self.fetchingView.removeFromSuperview()
                 }
             }
         }

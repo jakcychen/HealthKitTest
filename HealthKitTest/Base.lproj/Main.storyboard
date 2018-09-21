@@ -51,27 +51,10 @@
                                     </button>
                                 </subviews>
                             </stackView>
-                            <view hidden="YES" alpha="0.5" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uaz-v5-g0y">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <subviews>
-                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="RrT-J0-pMX">
-                                        <rect key="frame" x="169" y="315" width="37" height="37"/>
-                                    </activityIndicatorView>
-                                </subviews>
-                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <constraints>
-                                    <constraint firstItem="RrT-J0-pMX" firstAttribute="centerY" secondItem="uaz-v5-g0y" secondAttribute="centerY" id="P9y-HG-vA9"/>
-                                    <constraint firstItem="RrT-J0-pMX" firstAttribute="centerX" secondItem="uaz-v5-g0y" secondAttribute="centerX" id="bwg-mY-IsG"/>
-                                </constraints>
-                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="doG-Jl-Hh9" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="30" id="QgN-IO-x6z"/>
-                            <constraint firstItem="uaz-v5-g0y" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="Udn-PX-R0g"/>
-                            <constraint firstAttribute="bottom" secondItem="uaz-v5-g0y" secondAttribute="bottom" id="VE3-lu-TD8"/>
-                            <constraint firstItem="uaz-v5-g0y" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="fx6-HM-QJD"/>
-                            <constraint firstItem="uaz-v5-g0y" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="gG0-jP-Kti"/>
                             <constraint firstItem="doG-Jl-Hh9" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="100" id="qDk-zw-QDW"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="doG-Jl-Hh9" secondAttribute="trailing" constant="30" id="ztO-Dz-FaD"/>
                         </constraints>
@@ -86,8 +69,23 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <view alpha="0.5" contentMode="scaleToFill" id="uaz-v5-g0y">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <subviews>
+                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="RrT-J0-pMX">
+                            <rect key="frame" x="169" y="315" width="37" height="37"/>
+                        </activityIndicatorView>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="RrT-J0-pMX" firstAttribute="centerY" secondItem="uaz-v5-g0y" secondAttribute="centerY" id="P9y-HG-vA9"/>
+                        <constraint firstItem="RrT-J0-pMX" firstAttribute="centerX" secondItem="uaz-v5-g0y" secondAttribute="centerX" id="bwg-mY-IsG"/>
+                    </constraints>
+                    <viewLayoutGuide key="safeArea" id="vmz-nS-ueO"/>
+                </view>
             </objects>
-            <point key="canvasLocation" x="-1106.4000000000001" y="739.88005997001505"/>
+            <point key="canvasLocation" x="-1574" y="768"/>
         </scene>
         <!--Datas-->
         <scene sceneID="eOY-GZ-qfm">
