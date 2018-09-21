@@ -1,0 +1,44 @@
+fastlane_version "2.6.0"
+default_platform :ios
+xcversion(version: "9.3")
+
+project = "HealthKitTest"
+version_number = get_info_plist_value(path: "./HealthKitTest/Info.plist", key: "CFBundleShortVersionString")
+build_number = get_info_plist_value(path: "./HealthKitTest/Info.plist", key: "CFBundleVersion")
+path = version_number + "/" + build_number
+
+platform :ios do
+  #
+  # Learn more here: https://github.com/fastlane/setups/blob/master/samples-ios/distribute-beta-build.md 🚀
+  #
+  lane :carthage_bootstrap do
+    # Fabric generated this lane for deployment to Crashlytics Beta
+    # set 'export_method' to 'ad-hoc' if your Crashlytics Beta distribution uses ad-hoc provisioning
+    carthage(
+      command: "bootstrap",       # One of: build, bootstrap, update, archive. (default: bootstrap)
+      # configuration: "Release",   # Build configuration to use when building
+      platform: "iOS"  # Define which platform to build for (one of ‘all’, ‘Mac’, ‘iOS’, ‘watchOS’, ‘tvOS‘, or comma-separated values of the formers except for ‘all’)
+    )
+  end
+
+  lane :beta do |values|
+
+    groups = values[:test_email] ? values[:test_email] : ['mml-bu'] # You can define groups on the web and reference them here
+
+    #====================================================
+
+    gym(scheme: 'HealthKitTest',
+      export_method: 'enterprise',
+      export_options:{provisioningProfiles: {"tw.com.cathaylife.HealthKitTest": "HealthKitTest_inHouse_2019"}}
+    )
+
+    crashlytics(api_token: '210cae29d9313bf20a7895e227a817eb0d9bac8d',
+             build_secret: 'aed6f83a6637179425f954b9195885e2f6098123bc1034566cc0f6eae3bf7be8',
+                   #emails: emails,
+                   groups: groups,
+                    notes: "HealthKitTest",
+            notifications: true) # Should this distribution notify your testers via email?
+    upload_symbols_to_crashlytics
+  end
+
+end
