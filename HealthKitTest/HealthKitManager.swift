@@ -77,11 +77,17 @@ extension HealthKitManager
                       statsCollection.statistics().count > 0  // 0 if not authorize
             else
             {
-                DispatchQueue.main.async
-                {
+                DispatchQueue.main.async {
                     completionHandler(false)
                 }
-                
+                return
+            }
+            
+            // only for purpose of check whether can read user data
+            if duration == -1 {
+                DispatchQueue.main.async {
+                        completionHandler(true)
+                }
                 return
             }
             

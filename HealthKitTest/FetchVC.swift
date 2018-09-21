@@ -47,9 +47,11 @@ class FetchVC: UIViewController {
                     return
                 }
                 
-                self.fetchButton.setTitle("fetch", for: .normal)
-                self.fetchingView.isHidden = true
-                self.fetchingIndicator.stopAnimating()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self.fetchButton.setTitle("fetch", for: .normal)
+                    self.fetchingView.isHidden = true
+                    self.fetchingIndicator.stopAnimating()
+                }
             }
         }
     }
