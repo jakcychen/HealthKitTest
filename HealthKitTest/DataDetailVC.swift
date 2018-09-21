@@ -44,7 +44,7 @@ extension DataDetailVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell")
-        cell?.textLabel?.text = "\(self.datas[indexPath.row].step) - \(self.datas[indexPath.row].date)"
+        cell?.textLabel?.text = "\(self.datas[indexPath.row].date) - \(self.datas[indexPath.row].step)"
         cell?.detailTextLabel?.text = "Fetch: \(self.datas[indexPath.row].fetchTime)"
         cell?.detailTextLabel?.textColor = UIColor.lightGray
         
