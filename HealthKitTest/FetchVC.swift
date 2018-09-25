@@ -14,7 +14,8 @@ class FetchVC: UIViewController {
     @IBOutlet weak var fetchButton: UIButton!
     @IBOutlet weak var fetchingView: UIView!
     @IBOutlet weak var fetchingIndicator: UIActivityIndicatorView!
-
+    @IBOutlet weak var versioinLabel: UILabel!
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -25,6 +26,9 @@ class FetchVC: UIViewController {
             name: NSNotification.Name.UIApplicationDidBecomeActive,
             object: nil
         )
+        
+        let buildNumber = Bundle.main.infoDictionary!["CFBundleVersion"]
+        self.versioinLabel.text = buildNumber as! String
     }
     
     @objc func appBecomeActive() {
@@ -79,6 +83,7 @@ class FetchVC: UIViewController {
             alert.addAction(setAction)
             
             self.present(alert, animated: true, completion: nil)
+            return
         }
         
         HealthKitManager.authorizeHealthKit { (authorized, error) in
