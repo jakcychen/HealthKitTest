@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import MessageUI
 
 class FetchVC: UIViewController {
 
@@ -19,18 +18,76 @@ class FetchVC: UIViewController {
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appBecomeActive),
+            name: NSNotification.Name.UIApplicationDidBecomeActive,
+            object: nil
+        )
+    }
+    
+    @objc func appBecomeActive() {
+
+        HealthKitManager.isHealthInfoAuthorized {
+            (isBinded) in
+            
+            if !isBinded {
+                self.disableFetching()
+                return
+            }
+            
+            self.enableFetching()
+        }
+    }
+    
+    func disableFetching() {
+        self.authButton.isEnabled = true
+        self.authButton.backgroundColor = self.view.tintColor
+        self.fetchButton.isEnabled = false
+        self.fetchButton.backgroundColor = UIColor.gray
+    }
+    
+    func enableFetching() {
+        self.authButton.setTitle("Authorized", for: .normal)
+        self.authButton.isEnabled = false
+        self.authButton.backgroundColor = UIColor.gray
+        self.fetchButton.isEnabled = true
+        self.fetchButton.backgroundColor = self.view.tintColor
     }
     
     @IBAction func auth(_ sender: Any) {
         
+        if UserDefaults.standard.bool(forKey: "isHealthKitAccessAsked") {
+            
+            let title: String = "Need Authorize"
+            let message: String = "HealthKitTest need authorize to access healthKit"
+            
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { alert in
+                self.dismiss(animated: true, completion: nil)
+            }
+            alert.addAction(cancelAction)
+            
+            let setAction = UIAlertAction(title: "Authorize", style: .default) { alert in
+                if let settingsURL = URL(string: "App-prefs:") {
+                    UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
+                    self.presentingViewController?.dismiss(animated: true, completion: nil)
+                }
+            }
+            alert.addAction(setAction)
+            
+            self.present(alert, animated: true, completion: nil)
+        }
+        
         HealthKitManager.authorizeHealthKit { (authorized, error) in
             
             if !authorized  {
+                self.disableFetching()
                 return
             }
-            self.authButton.setTitle("Authrized", for: .normal)
-            self.authButton.isEnabled = false
-            self.authButton.backgroundColor = UIColor.gray
+            self.enableFetching()
         }
     }
 
@@ -62,40 +119,5 @@ class FetchVC: UIViewController {
     }
 }
 
-extension FetchVC: MFMailComposeViewControllerDelegate {
-    
-    @IBAction func email(_ sender: Any) {
-        
-        guard MFMailComposeViewController.canSendMail() else {
-            return
-        }
-        
-        let mailVC = MFMailComposeViewController()
-        mailVC.mailComposeDelegate = self
-        
-        let localDateFormatter = DateFormatter()
-        localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
-        localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
-        let dateString = localDateFormatter.string(from: Date())
-        mailVC.setSubject("HealthTest Report \(dateString)")
-        
-        mailVC.setToRecipients([
-            "yjwang@cathaylife.com.tw",
-            "frequency@cathaylife.com.tw",
-            "sylas171@hotmail.com"
-        ])
-        
-        let data = try? Data(contentsOf: AppDelegate.databasePath)
-        mailVC.addAttachmentData(data!, mimeType: "application/octet-stream", fileName: "sqlite3.db")
-        
-        self.present(mailVC, animated: true)
-    }
-    
-    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-   
-        self.dismiss(animated: true, completion: nil)
-    }
-}
 
 
