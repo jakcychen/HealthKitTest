@@ -61,24 +61,14 @@ extension DataDetailVC: UITableViewDataSource {
         let softWareVersion = self.datas[indexPath.row].softWareVersion
         cell.systemInfo.text = softWareVersion
         
-        /*
-        cell?.textLabel?.text = "\(self.datas[indexPath.row].step)"
-
-        var date = self.datas[indexPath.row].date.components(separatedBy: " ")
-        //let hardWareVersion = self.datas[indexPath.row].hardWareVersion
-        cell?.detailTextLabel?.text = "\(date[1]), \(productName), \(softWareVersion)"
-        
-        cell?.detailTextLabel?.textColor = UIColor.lightGray
-        */
-        
         return cell
     }
 }
 
 class DataDetailCell: UITableViewCell {
+    
     @IBOutlet weak var stepCount: UILabel!
     @IBOutlet weak var stepTime: UILabel!
-    
     @IBOutlet weak var systemInfo: UILabel!
     @IBOutlet weak var deviceInfo: UILabel!
 }
