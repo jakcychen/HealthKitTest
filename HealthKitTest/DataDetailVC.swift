@@ -33,6 +33,7 @@ class DataDetailVC: UIViewController {
         self.tableView.reloadData()
     }
 }
+
 extension DataDetailVC: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -47,17 +48,37 @@ extension DataDetailVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell")
+        let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell") as! DataDetailCell
+        
+        cell.stepCount.text = "\(self.datas[indexPath.row].step)"
+        
+        var date = self.datas[indexPath.row].date.components(separatedBy: " ")
+        cell.stepTime.text = "\(date[1])"
+        
+        let productName = self.datas[indexPath.row].productName
+        cell.deviceInfo.text = productName
+        
+        let softWareVersion = self.datas[indexPath.row].softWareVersion
+        cell.systemInfo.text = softWareVersion
+        
+        /*
         cell?.textLabel?.text = "\(self.datas[indexPath.row].step)"
 
         var date = self.datas[indexPath.row].date.components(separatedBy: " ")
         //let hardWareVersion = self.datas[indexPath.row].hardWareVersion
-        let productName = self.datas[indexPath.row].productName
-        let softWareVersion = self.datas[indexPath.row].softWareVersion
         cell?.detailTextLabel?.text = "\(date[1]), \(productName), \(softWareVersion)"
         
         cell?.detailTextLabel?.textColor = UIColor.lightGray
-
-        return cell!
+        */
+        
+        return cell
     }
+}
+
+class DataDetailCell: UITableViewCell {
+    @IBOutlet weak var stepCount: UILabel!
+    @IBOutlet weak var stepTime: UILabel!
+    
+    @IBOutlet weak var systemInfo: UILabel!
+    @IBOutlet weak var deviceInfo: UILabel!
 }
