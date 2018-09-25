@@ -78,15 +78,28 @@ class SQLiteManager {
         var resultArray: [StepModel] = []
         while sqlite3_step(statement) == SQLITE_ROW {
 
-            let a = String(cString: sqlite3_column_text(statement, 0))
-            let healthModel = StepModel(date: a)
+            let date = String(cString: sqlite3_column_text(statement, 0))
+            let healthModel = StepModel(date: date)
             
-            let b = String(cString: sqlite3_column_text(statement, 1))
-            healthModel.step = b
+            let step = String(cString: sqlite3_column_text(statement, 1))
+            healthModel.step = step
             
-            let c = String(cString: sqlite3_column_text(statement, 2))
-            healthModel.fetchTime = c
+            let fetchTime = String(cString: sqlite3_column_text(statement, 2))
+            healthModel.fetchTime = fetchTime
 
+            
+            if tableName == AppDelegate.DB_TABLE_2 {
+                let hardWareVersion = String(cString: sqlite3_column_text(statement, 3))
+                healthModel.hardWareVersion = hardWareVersion
+                
+                let softWareVersion = String(cString: sqlite3_column_text(statement, 4))
+                healthModel.softWareVersion = softWareVersion
+                
+                let productName = String(cString: sqlite3_column_text(statement, 5))
+                healthModel.productName = productName
+            }
+            
+            
             resultArray.append(healthModel)
         }
         sqlite3_finalize(statement)

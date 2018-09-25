@@ -9,12 +9,35 @@
 import UIKit
 import HealthKit
 
+let productName = [
+    "iPhone6,1":  "iPhone 5s (A1433/A1453)",
+    "iPhone6,2":  "iPhone 5s (A1457/A1518/A1530)",
+    "iPhone7,1":  "iPhone 6 Plus",
+    "iPhone7,2":  "iPhone 6",
+    "iPhone8,1":  "iPhone 6s",
+    "iPhone8,2":  "iPhone 6s Plus",
+    "iPhone8,4":  "iPhone SE",
+    "iPhone9,1":  "iPhone 7 (A1660/A1779/A1780)",
+    "iPhone9,2":  "iPhone 7 Plus (A1661/A1785/A1786)",
+    "iPhone9,3":  "iPhone 7 (A1778)",
+    "iPhone9,4":  "iPhone 7 Plus (A1784)",
+    "iPhone10,1": "iPhone 8 (A1863/A1906)",
+    "iPhone10,2": "iPhone 8 Plus (A1864/A1898)",
+    "iPhone10,3": "iPhone X (A1865/A1902)",
+    "iPhone10,4": "iPhone 8 (A1905)",
+    "iPhone10,5": "iPhone 8 Plus (A1897)",
+    "iPhone10,6": "iPhone X (A1901)",
+]
+
 class StepModel
 {
     var date: String = ""
     var step: String = "0"
     var fetchTime: String = ""
-    
+    var softWareVersion: String = ""
+    var hardWareVersion: String = ""
+    var productName: String = ""
+
     init(date: String)
     {
         self.date = date
@@ -31,6 +54,7 @@ extension HealthKitManager
     static func fetchStepCount(duration: Int, completionHandler: @escaping (Bool) -> ())
     {
         print("fetchStepCount")
+        
         let fetchTime = Date()
         let localDateFormatter = DateFormatter()
         localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -86,7 +110,7 @@ extension HealthKitManager
             // only for purpose of check whether can read user data
             if duration == -1 {
                 DispatchQueue.main.async {
-                        completionHandler(true)
+                    completionHandler(true)
                 }
                 return
             }
@@ -101,7 +125,7 @@ extension HealthKitManager
             
             statsCollection.enumerateStatistics(from: startDate, to: endDate)
             {(statistic, stop) in
-                
+  
                 if let quantity = statistic.sumQuantity()
                 {
                     let count = quantity.doubleValue(for: HKUnit.count())
@@ -110,8 +134,6 @@ extension HealthKitManager
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateString = dateFormatter.string(from: date)
-
-                    print("\(dateString) - \(count) - \(fetchTimeString)")
                     
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_1,
@@ -123,13 +145,12 @@ extension HealthKitManager
                     )
                 }
             }
-            
-            self.fetchStepCountDetail(startDate: startDate.addingTimeInterval(8 * 60 * 60), endDate: endDate.addingTimeInterval(8 * 60 * 60), fetchTimeString: fetchTimeString, completionHandler: completionHandler)
-            
-//            DispatchQueue.main.async
-//            {
-//                completionHandler(true)
-//            }
+
+            self.fetchStepCountDetail(
+                startDate: startDate.addingTimeInterval(-24 * 60 * 60),
+                endDate: endDate.addingTimeInterval(24 * 60 * 60),
+                fetchTimeString: fetchTimeString, completionHandler: completionHandler
+            )
         }
         
         self.healthStore.execute(query)
@@ -148,26 +169,26 @@ extension HealthKitManager
                 
                 for result in results as! [HKQuantitySample] {
                     
-                    //let date = result.endDate.addingTimeInterval(8*60*60)
-                    let fetchTime = Date()
                     let localDateFormatter = DateFormatter()
                     localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
                     localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
                     localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
                     let date = localDateFormatter.string(from: result.endDate)
-                    
-                    
-                    
                     let count = result.quantity.doubleValue(for: HKUnit.count())
+
+                    let device = result.device
+                    
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_2,
                         rowInfo: [
                             "DATE": "'\(date)'",
                             "STEP": String(Int(count)),
-                            "FETCH_TIME": "'\(fetchTimeString)'"
+                            "FETCH_TIME": "'\(fetchTimeString)'",
+                            "HARD_WARE_VERSION": "'\(device?.hardwareVersion! ?? "N/A")'",
+                            "SOFT_WARE_VERSION": "'\(device?.softwareVersion! ?? "N/A")'",
+                            "PRODUCT_NAME": "'\(productName[(device?.hardwareVersion)!] ?? "N/A")'"
                         ]
                     )
-                    print("\(date) - \(count) - \(fetchTimeString)")
                 }
             }
             

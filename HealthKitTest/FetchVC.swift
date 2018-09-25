@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MessageUI
 
 class FetchVC: UIViewController {
 
@@ -16,12 +17,14 @@ class FetchVC: UIViewController {
     @IBOutlet weak var fetchingIndicator: UIActivityIndicatorView!
 
     override func viewDidLoad() {
+        
         super.viewDidLoad()
     }
     
-    @IBAction func auth(_ sender: Any)
-    {
+    @IBAction func auth(_ sender: Any) {
+        
         HealthKitManager.authorizeHealthKit { (authorized, error) in
+            
             if !authorized  {
                 return
             }
@@ -31,18 +34,20 @@ class FetchVC: UIViewController {
         }
     }
 
-    @IBAction func fetch(_ sender: Any)
-    {
+    @IBAction func fetch(_ sender: Any) {
+        
         self.fetchButton.setTitle("fetching in progress", for: .normal)
         self.fetchingIndicator.startAnimating()
         self.view.window?.addSubview(self.fetchingView)
         
         HealthKitManager.authorizeHealthKit { (authorized, error) in
+            
             if !authorized  {
                 return
             }
             
             HealthKitManager.updateHealthInfo { (success) in
+                
                 if !success {
                     return
                 }
@@ -55,5 +60,42 @@ class FetchVC: UIViewController {
             }
         }
     }
-
 }
+
+extension FetchVC: MFMailComposeViewControllerDelegate {
+    
+    @IBAction func email(_ sender: Any) {
+        
+        guard MFMailComposeViewController.canSendMail() else {
+            return
+        }
+        
+        let mailVC = MFMailComposeViewController()
+        mailVC.mailComposeDelegate = self
+        
+        let localDateFormatter = DateFormatter()
+        localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
+        localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
+        let dateString = localDateFormatter.string(from: Date())
+        mailVC.setSubject("HealthTest Report \(dateString)")
+        
+        mailVC.setToRecipients([
+            "yjwang@cathaylife.com.tw",
+            "frequency@cathaylife.com.tw",
+            "sylas171@hotmail.com"
+        ])
+        
+        let data = try? Data(contentsOf: AppDelegate.databasePath)
+        mailVC.addAttachmentData(data!, mimeType: "application/octet-stream", fileName: "sqlite3.db")
+        
+        self.present(mailVC, animated: true)
+    }
+    
+    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+   
+        self.dismiss(animated: true, completion: nil)
+    }
+}
+
+

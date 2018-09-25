@@ -9,22 +9,22 @@
 import UIKit
 
 class DataDetailVC: UIViewController {
+    
     @IBOutlet weak var tableView: UITableView!
     var dataDate: String!
     var dataFetchTime: String!
-    
     var datas: [StepModel]!
     
     override func viewWillAppear(_ animated: Bool) {
+        
         super.viewWillAppear(animated)
         
-        print("\(self.dataDate) - \(self.dataFetchTime)")
-        
-        
-        self.title = self.dataDate!
+        self.navigationItem.title = self.dataDate
+        self.navigationItem.prompt = "Fetch at: \(self.dataFetchTime!)"
         
         var temp: [StepModel] = []
         for data in AppDelegate.database.readData(tableName: AppDelegate.DB_TABLE_2) {
+            
             if data.date.contains(self.dataDate!) && data.fetchTime.contains(self.dataFetchTime!) {
                 temp.append(data)
             }
@@ -34,20 +34,30 @@ class DataDetailVC: UIViewController {
     }
 }
 extension DataDetailVC: UITableViewDataSource {
+    
     func numberOfSections(in tableView: UITableView) -> Int {
+        
         return 1
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         return self.datas.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell")
-        cell?.textLabel?.text = "\(self.datas[indexPath.row].date) - \(self.datas[indexPath.row].step)"
-        cell?.detailTextLabel?.text = "Fetch: \(self.datas[indexPath.row].fetchTime)"
-        cell?.detailTextLabel?.textColor = UIColor.lightGray
         
+        let cell = tableView.dequeueReusableCell(withIdentifier: "stepDetailCell")
+        cell?.textLabel?.text = "\(self.datas[indexPath.row].step)"
+
+        var date = self.datas[indexPath.row].date.components(separatedBy: " ")
+        //let hardWareVersion = self.datas[indexPath.row].hardWareVersion
+        let productName = self.datas[indexPath.row].productName
+        let softWareVersion = self.datas[indexPath.row].softWareVersion
+        cell?.detailTextLabel?.text = "\(date[1]), \(productName), \(softWareVersion)"
+        
+        cell?.detailTextLabel?.textColor = UIColor.lightGray
+
         return cell!
     }
 }
