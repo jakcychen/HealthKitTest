@@ -15,11 +15,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    static var databasePath: URL!
     static var database: SQLiteManager!
     static var DB_NAME: String = "sqlite3.db"
     static var DB_TABLE_1: String = "Step"
     static var DB_TABLE_2: String = "StepDetail"
-
+    
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil
@@ -28,22 +29,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         Fabric.with([Crashlytics.self])
         
         let directoryPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let databasePath = directoryPath.appendingPathComponent(AppDelegate.DB_NAME)
-        AppDelegate.database = SQLiteManager(path: databasePath.absoluteString)
+        AppDelegate.databasePath = directoryPath.appendingPathComponent(AppDelegate.DB_NAME)
+        AppDelegate.database = SQLiteManager(path: AppDelegate.databasePath.absoluteString)
         if AppDelegate.database != nil {
             let _ = AppDelegate.database!.createTable(
                 AppDelegate.DB_TABLE_1,
                 columnsInfo: [
-                    "DATE TEXT PRIMARY KEY",
+                    "DATE TEXT",
                     "STEP TEXT",
+                    "FETCH_TIME TEXT"
                 ]
             )
             
             let _ = AppDelegate.database!.createTable(
                 AppDelegate.DB_TABLE_2,
                 columnsInfo: [
-                    "DATE TEXT PRIMARY KEY",
+                    "DATE TEXT",
                     "STEP TEXT",
+                    "FETCH_TIME TEXT",
+                    "HARD_WARE_VERSION",
+                    "SOFT_WARE_VERSION",
+                    "PRODUCT_NAME"
                 ]
             )
         }
@@ -51,4 +57,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 }
+
+
+
+
+
+
 
