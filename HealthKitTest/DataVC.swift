@@ -53,14 +53,37 @@ extension DataVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
+        let date = self.tableViewData[indexPath.row].date
+        let fetchTime = self.tableViewData[indexPath.row].fetchTime
+        var rawDataNumber = 0
+        for data in AppDelegate.database.readData(tableName: AppDelegate.DB_TABLE_2) {
+              if data.date.contains(date) && data.fetchTime.contains(fetchTime) {
+                rawDataNumber += Int(data.step)!
+            }
+        }
+        
+
         let cell = tableView.dequeueReusableCell(withIdentifier: "stepCell")
-        cell?.textLabel?.text
-            = "Date: \(self.tableViewData[indexPath.row].date) - Step: \(self.tableViewData[indexPath.row].step)"
+
+        let attributedString = NSMutableAttributedString(string: "\(date)    Step: ")
+        attributedString.append(
+            NSAttributedString(
+                string: "\(self.tableViewData[indexPath.row].step) ",
+                attributes: [ NSAttributedStringKey.foregroundColor : self.view.tintColor]
+            )
+        )
+        attributedString.append(NSAttributedString(string: "(\(rawDataNumber))"))
+        cell?.textLabel?.attributedText = attributedString
+        
         cell?.detailTextLabel?.text = "Fetch: \(self.datas[indexPath.row].fetchTime)"
         cell?.detailTextLabel?.textColor = UIColor.lightGray
+        
         cell?.layer.setValue(self.tableViewData[indexPath.row].date, forKey: "dataDate")
         cell?.layer.setValue(self.tableViewData[indexPath.row].fetchTime, forKey: "dataFetchTime")
 
+        
+
+        
         return cell!
     }
 }
@@ -86,7 +109,7 @@ extension DataVC: MFMailComposeViewControllerDelegate {
             "yjwang@cathaylife.com.tw",
             "frequency@cathaylife.com.tw",
             "sylas171@hotmail.com"
-            ])
+        ])
         
         let data = try? Data(contentsOf: AppDelegate.databasePath)
         mailVC.addAttachmentData(data!, mimeType: "application/octet-stream", fileName: "sqlite3.db")
