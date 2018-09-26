@@ -51,10 +51,18 @@
                                     </button>
                                 </subviews>
                             </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GGm-R3-XZ4">
+                                <rect key="frame" x="166.5" y="582.5" width="42" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="GGm-R3-XZ4" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="BNI-Yp-ant"/>
                             <constraint firstItem="doG-Jl-Hh9" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="30" id="QgN-IO-x6z"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="GGm-R3-XZ4" secondAttribute="bottom" constant="15" id="gA9-2m-wdM"/>
                             <constraint firstItem="doG-Jl-Hh9" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="100" id="qDk-zw-QDW"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="doG-Jl-Hh9" secondAttribute="trailing" constant="30" id="ztO-Dz-FaD"/>
                         </constraints>
@@ -66,6 +74,7 @@
                         <outlet property="fetchButton" destination="F2Z-UD-qTK" id="na6-c9-zaj"/>
                         <outlet property="fetchingIndicator" destination="RrT-J0-pMX" id="mdZ-Hf-11D"/>
                         <outlet property="fetchingView" destination="uaz-v5-g0y" id="Tqu-PH-4Di"/>
+                        <outlet property="versioinLabel" destination="GGm-R3-XZ4" id="ybV-CU-LuN"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -85,7 +94,7 @@
                     <viewLayoutGuide key="safeArea" id="vmz-nS-ueO"/>
                 </view>
             </objects>
-            <point key="canvasLocation" x="-1574" y="768"/>
+            <point key="canvasLocation" x="-1575.2" y="767.76611694152928"/>
         </scene>
         <!--Datas-->
         <scene sceneID="eOY-GZ-qfm">

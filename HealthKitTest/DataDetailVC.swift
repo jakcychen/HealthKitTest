@@ -66,9 +66,9 @@ extension DataDetailVC: UITableViewDataSource {
 }
 
 class DataDetailCell: UITableViewCell {
+    
     @IBOutlet weak var stepCount: UILabel!
     @IBOutlet weak var stepTime: UILabel!
-    
     @IBOutlet weak var systemInfo: UILabel!
     @IBOutlet weak var deviceInfo: UILabel!
 }
