@@ -401,13 +401,18 @@ extension HealthKitManager
         
         dispatchGroup.notify(queue: .main) {
 
+            self.healthModels = [:]
             var model: HealthModel
             
             for (date, step) in self.stepData {
                 
-                model = HealthModel(date: date)
-                model.STEP = step
-                self.healthModels[date] = model
+                if let data = self.healthModels[date] {
+                    data.STEP = step
+                } else {
+                    model = HealthModel(date: date)
+                    model.STEP = step
+                    self.healthModels[date] = model
+                }
             }
             
             for (date, distance) in self.distanceData {
