@@ -11,7 +11,6 @@
 		5A3B65FD21522E8200A8827A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5A3B65FB21522E8200A8827A /* Main.storyboard */; };
 		5A3B65FF21522E8400A8827A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5A3B65FE21522E8400A8827A /* Assets.xcassets */; };
 		5A3B660221522E8400A8827A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5A3B660021522E8400A8827A /* LaunchScreen.storyboard */; };
-		5A3B660C21522F2700A8827A /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A3B660B21522F2700A8827A /* HealthKit.framework */; };
 		5A3B660E2152302900A8827A /* FetchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3B660D2152302900A8827A /* FetchVC.swift */; };
 		5A3B66102152303100A8827A /* DataVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3B660F2152303100A8827A /* DataVC.swift */; };
 		5A3B66122152310A00A8827A /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3B66112152310A00A8827A /* HealthKitManager.swift */; };
@@ -20,6 +19,7 @@
 		5AF70FDE21534C17003F94B9 /* SQLiteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF70FDD21534C16003F94B9 /* SQLiteManager.swift */; };
 		6D41F09F2154A2C900C54B98 /* Fabric.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D41F09D2154A2C900C54B98 /* Fabric.framework */; };
 		6D41F0A02154A2C900C54B98 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D41F09E2154A2C900C54B98 /* Crashlytics.framework */; };
+		6DE73017215CDFFB0061B0DE /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6DE73016215CDFFB0061B0DE /* HealthKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +30,6 @@
 		5A3B660121522E8400A8827A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		5A3B660321522E8400A8827A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5A3B660921522F2700A8827A /* HealthKitTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthKitTest.entitlements; sourceTree = "<group>"; };
-		5A3B660B21522F2700A8827A /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		5A3B660D2152302900A8827A /* FetchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchVC.swift; sourceTree = "<group>"; };
 		5A3B660F2152303100A8827A /* DataVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataVC.swift; sourceTree = "<group>"; };
 		5A3B66112152310A00A8827A /* HealthKitManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
@@ -39,6 +38,7 @@
 		5AF70FDD21534C16003F94B9 /* SQLiteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteManager.swift; sourceTree = "<group>"; };
 		6D41F09D2154A2C900C54B98 /* Fabric.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fabric.framework; sourceTree = SOURCE_ROOT; };
 		6D41F09E2154A2C900C54B98 /* Crashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crashlytics.framework; sourceTree = SOURCE_ROOT; };
+		6DE73016215CDFFB0061B0DE /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,7 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5AF70FDC21534BF9003F94B9 /* libsqlite3.tbd in Frameworks */,
-				5A3B660C21522F2700A8827A /* HealthKit.framework in Frameworks */,
+				6DE73017215CDFFB0061B0DE /* HealthKit.framework in Frameworks */,
 				6D41F0A02154A2C900C54B98 /* Crashlytics.framework in Frameworks */,
 				6D41F09F2154A2C900C54B98 /* Fabric.framework in Frameworks */,
 			);
@@ -96,8 +96,8 @@
 		5A3B660A21522F2700A8827A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6DE73016215CDFFB0061B0DE /* HealthKit.framework */,
 				5AF70FDB21534BF9003F94B9 /* libsqlite3.tbd */,
-				5A3B660B21522F2700A8827A /* HealthKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

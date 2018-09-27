@@ -456,7 +456,7 @@ extension HealthKitManager
                 ]
             )
         }
-        completionHandler(true)
+        
         let date = Date()
         self.fetchStepCountDetail(
             startDate: date.addingTimeInterval(40 *  -24 * 60 * 60),
