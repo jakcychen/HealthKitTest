@@ -400,6 +400,7 @@ extension HealthKitManager
         localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
         self.fetchTimeString = localDateFormatter.string(from: fetchTime)
         
+        
         let dispatchGroup = DispatchGroup()
         let task1 = DispatchQueue(label: "task2")
         let task2 = DispatchQueue(label: "task2")
@@ -407,22 +408,31 @@ extension HealthKitManager
         
         dispatchGroup.enter()
         task1.async {
-            self.fetchStepCount(duration: -39) {_ in dispatchGroup.leave() }
+            self.fetchStepCount(duration: -39) {_ in
+                dispatchGroup.leave()
+            }
         }
         
         dispatchGroup.enter()
         task2.async {
-            self.fetchDistance { dispatchGroup.leave() }
+            self.fetchDistance {
+                dispatchGroup.leave()
+            }
         }
         
         dispatchGroup.enter()
         task3.async {
-            self.fetchHeartRate { dispatchGroup.leave() }
+            self.fetchHeartRate {
+                dispatchGroup.leave()
+            }
         }
         
         dispatchGroup.notify(queue: .main) { self.uploadDataToServer(completionHandler) }
     }
-    
+}
+
+extension HealthKitManager
+{
     private static func uploadDataToServer(_ completionHandler: @escaping (Bool) -> ())
     {
         for data in self.healthModels {
