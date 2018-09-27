@@ -62,6 +62,11 @@ class HealthKitManager
     static var healthModels: [String: HealthModel] = [:]
     static let healthStore = HKHealthStore()
     static var fetchTimeString: String!
+    
+    static var stepData: [String: String] = [:]
+    static var distanceData: [String: String] = [:]
+    static var heartrateData: [String: String] = [:]
+
 }
 
 extension HealthKitManager
@@ -133,14 +138,7 @@ extension HealthKitManager
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateString = dateFormatter.string(from: date)
                     
-                    var model = self.healthModels[dateString]
-                    if model == nil {
-                        model = HealthModel(date: dateString)
-                    }
-                    if count > 0 {
-                        model?.STEP = String(lroundf(Float(count)))
-                    }
-                    self.healthModels[dateString] = model
+                    self.stepData[dateString] = String(lroundf(Float(count)))
                 }
             }
             
@@ -291,17 +289,8 @@ extension HealthKitManager
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateString = dateFormatter.string(from: date)
                     
-                    var model = self.healthModels[dateString]
-                    if model == nil {
-                        model = HealthModel(date: dateString)
-                    }
-                    
-                    if distance > 0 {
-                        model?.DISTANCE = String(Int(distance))
-                    }
-                    self.healthModels[dateString] = model
+                    self.distanceData[dateString] = String(lroundf(Float(distance)))
                 }
-                
             }
             completionHandler()
         }
@@ -370,16 +359,7 @@ extension HealthKitManager
                         dateFormatter.dateFormat = "yyyy-MM-dd"
                         let dateString = dateFormatter.string(from: date)
                         
-                        if let model = self.healthModels[dateString]
-                        {
-                            model.HEART_RATE = "\(String(min))-\(String(max))"
-                        }
-                        else
-                        {
-                            let model = HealthModel(date: dateString)
-                            model.HEART_RATE = "\(String(min))-\(String(max))"
-                            self.healthModels[dateString] = model
-                        }
+                        self.heartrateData[dateString] = "\(String(min))-\(String(max))"
                     }
             })
             
@@ -402,32 +382,58 @@ extension HealthKitManager
         
         
         let dispatchGroup = DispatchGroup()
-        let task1 = DispatchQueue(label: "task2")
-        let task2 = DispatchQueue(label: "task2")
-        let task3 = DispatchQueue(label: "task3")
-        
+
         dispatchGroup.enter()
-        task1.async {
-            self.fetchStepCount(duration: -39) {_ in
-                dispatchGroup.leave()
-            }
+        self.fetchStepCount(duration: -39) {_ in
+            dispatchGroup.leave()
         }
         
         dispatchGroup.enter()
-        task2.async {
-            self.fetchDistance {
-                dispatchGroup.leave()
-            }
+        self.fetchDistance {
+            dispatchGroup.leave()
         }
         
         dispatchGroup.enter()
-        task3.async {
-            self.fetchHeartRate {
-                dispatchGroup.leave()
-            }
+        self.fetchHeartRate {
+            dispatchGroup.leave()
         }
         
-        dispatchGroup.notify(queue: .main) { self.uploadDataToServer(completionHandler) }
+        
+        dispatchGroup.notify(queue: .main) {
+
+            var model: HealthModel
+            
+            for (date, step) in self.stepData {
+                
+                model = HealthModel(date: date)
+                model.STEP = step
+                self.healthModels[date] = model
+            }
+            
+            for (date, distance) in self.distanceData {
+                
+                if let data = self.healthModels[date] {
+                    data.DISTANCE = distance
+                } else {
+                    model = HealthModel(date: date)
+                    model.DISTANCE = distance
+                    self.healthModels[date] = model
+                }
+            }
+            
+            for (date, heartrate) in self.heartrateData {
+                
+                if let data = self.healthModels[date] {
+                    data.HEART_RATE = heartrate
+                } else {
+                    model = HealthModel(date: date)
+                    model.HEART_RATE = heartrate
+                    self.healthModels[date] = model
+                }
+            }
+
+            self.uploadDataToServer(completionHandler)
+        }
     }
 }
 
@@ -445,7 +451,7 @@ extension HealthKitManager
                 ]
             )
         }
-
+        completionHandler(true)
         let date = Date()
         self.fetchStepCountDetail(
             startDate: date.addingTimeInterval(40 *  -24 * 60 * 60),
