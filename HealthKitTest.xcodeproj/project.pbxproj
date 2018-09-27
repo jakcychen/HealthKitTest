@@ -76,6 +76,7 @@
 		5A3B65F621522E8200A8827A /* HealthKitTest */ = {
 			isa = PBXGroup;
 			children = (
+				5A3B65FB21522E8200A8827A /* Main.storyboard */,
 				6D41F09E2154A2C900C54B98 /* Crashlytics.framework */,
 				6D41F09D2154A2C900C54B98 /* Fabric.framework */,
 				5A3B660921522F2700A8827A /* HealthKitTest.entitlements */,
@@ -86,7 +87,6 @@
 				5A3B66112152310A00A8827A /* HealthKitManager.swift */,
 				5AF70FDD21534C16003F94B9 /* SQLiteManager.swift */,
 				5A3B65FE21522E8400A8827A /* Assets.xcassets */,
-				5A3B65FB21522E8200A8827A /* Main.storyboard */,
 				5A3B660021522E8400A8827A /* LaunchScreen.storyboard */,
 				5A3B660321522E8400A8827A /* Info.plist */,
 			);

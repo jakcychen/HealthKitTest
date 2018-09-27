@@ -196,7 +196,41 @@ extension HealthKitManager
         
         self.healthStore.execute(query)
     }
+}
+
+extension HealthKitManager
+{
+    static func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void)
+    {
+        let stepCount = HKObjectType.quantityType(forIdentifier: .stepCount)!
+        let healthInfoToRead: Set<HKObjectType> = [
+            stepCount,
+            HKObjectType.quantityType(forIdentifier: .heartRate)!,
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        ]
+
+        let healthInfoToWrite: Set<HKSampleType> = []
+        
+        self.healthStore.requestAuthorization(toShare: healthInfoToWrite, read: healthInfoToRead)
+        { (success, error) in
+            
+            // success here only means that iOS successfully asked the user about health kit access
+            UserDefaults.standard.set(true, forKey: "isHealthKitAccessAsked")
+            
+            self.isHealthInfoAuthorized({ (isAuthorized) in
+                completion(isAuthorized, nil)
+            })
+        }
+    }
     
+    static func isHealthInfoAuthorized(_ completionHandler: @escaping (Bool) -> ())
+    {
+        self.fetchStepCount(duration: -1, completionHandler: completionHandler)
+    }
+}
+
+extension HealthKitManager
+{
     static func fetchDistance(completionHandler: @escaping () -> ())
     {
         //
@@ -263,18 +297,20 @@ extension HealthKitManager
                     }
                     
                     if distance > 0 {
-                        model?.STEP = String(Int(distance))
+                        model?.DISTANCE = String(Int(distance))
                     }
                     self.healthModels[dateString] = model
-                    
                 }
- 
+                
             }
             completionHandler()
         }
         self.healthStore.execute(query)
     }
-    
+}
+
+extension HealthKitManager
+{
     static func fetchHeartRate(completionHandler: @escaping () -> ())
     {
         //
@@ -322,65 +358,34 @@ extension HealthKitManager
             }
             
             statsCollection.enumerateStatistics(from: startDate, to: endDate, with:
-            {(statistic, stop) in
-                
-                if let maxQquantity = statistic.maximumQuantity(), let minQuantity = statistic.minimumQuantity()
-                {
-                    let max = maxQquantity.doubleValue(for: HKUnit(from: "count/min"))
-                    let min = minQuantity.doubleValue(for: HKUnit(from: "count/min"))
+                {(statistic, stop) in
                     
-                    let date = statistic.startDate
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd"
-                    let dateString = dateFormatter.string(from: date)
-                    
-                    if let model = self.healthModels[dateString]
+                    if let maxQquantity = statistic.maximumQuantity(), let minQuantity = statistic.minimumQuantity()
                     {
-                        model.HEART_RATE = "\(String(min))-\(String(max))"
+                        let max = maxQquantity.doubleValue(for: HKUnit(from: "count/min"))
+                        let min = minQuantity.doubleValue(for: HKUnit(from: "count/min"))
+                        
+                        let date = statistic.startDate
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let dateString = dateFormatter.string(from: date)
+                        
+                        if let model = self.healthModels[dateString]
+                        {
+                            model.HEART_RATE = "\(String(min))-\(String(max))"
+                        }
+                        else
+                        {
+                            let model = HealthModel(date: dateString)
+                            model.HEART_RATE = "\(String(min))-\(String(max))"
+                            self.healthModels[dateString] = model
+                        }
                     }
-                    else
-                    {
-                        let model = HealthModel(date: dateString)
-                        model.HEART_RATE = "\(String(min))-\(String(max))"
-                        self.healthModels[dateString] = model
-                    }
-                }
             })
             
             completionHandler()
         }
         self.healthStore.execute(query)
-    }
-}
-
-extension HealthKitManager
-{
-    static func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void)
-    {
-        let stepCount = HKObjectType.quantityType(forIdentifier: .stepCount)!
-        let healthInfoToRead: Set<HKObjectType> = [
-            stepCount,
-            HKObjectType.quantityType(forIdentifier: .heartRate)!,
-            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
-        ]
-
-        let healthInfoToWrite: Set<HKSampleType> = []
-        
-        self.healthStore.requestAuthorization(toShare: healthInfoToWrite, read: healthInfoToRead)
-        { (success, error) in
-            
-            // success here only means that iOS successfully asked the user about health kit access
-            UserDefaults.standard.set(true, forKey: "isHealthKitAccessAsked")
-            
-            self.isHealthInfoAuthorized({ (isAuthorized) in
-                completion(isAuthorized, nil)
-            })
-        }
-    }
-    
-    static func isHealthInfoAuthorized(_ completionHandler: @escaping (Bool) -> ())
-    {
-        self.fetchStepCount(duration: -1, completionHandler: completionHandler)
     }
 }
 
@@ -396,15 +401,24 @@ extension HealthKitManager
         self.fetchTimeString = localDateFormatter.string(from: fetchTime)
         
         let dispatchGroup = DispatchGroup()
+        let task1 = DispatchQueue(label: "task2")
+        let task2 = DispatchQueue(label: "task2")
+        let task3 = DispatchQueue(label: "task3")
         
         dispatchGroup.enter()
-        self.fetchStepCount(duration: -39) {_ in dispatchGroup.leave() }
+        task1.async {
+            self.fetchStepCount(duration: -39) {_ in dispatchGroup.leave() }
+        }
         
         dispatchGroup.enter()
-        self.fetchDistance { dispatchGroup.leave() }
+        task2.async {
+            self.fetchDistance { dispatchGroup.leave() }
+        }
         
         dispatchGroup.enter()
-        self.fetchHeartRate { dispatchGroup.leave() }
+        task3.async {
+            self.fetchHeartRate { dispatchGroup.leave() }
+        }
         
         dispatchGroup.notify(queue: .main) { self.uploadDataToServer(completionHandler) }
     }
