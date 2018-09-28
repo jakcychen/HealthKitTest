@@ -59,29 +59,20 @@ let productName = [
 
 class HealthKitManager
 {
-    static var healthModels: [String: HealthModel] = [:]
     static let healthStore = HKHealthStore()
     static var fetchTimeString: String!
-    
-    static var stepData: [String: String] = [:]
-    static var distanceData: [String: String] = [:]
-    static var heartrateData: [String: String] = [:]
-
 }
 
 extension HealthKitManager
 {
-    static func fetchStepCount(duration: Int, completionHandler: @escaping (Bool) -> ())
+    static func fetchStepCount(duration: Int, completionHandler: @escaping (Bool, [String: String]) -> ())
     {        
-        //
         let quantityType: HKQuantityType? = HKObjectType.quantityType(
             forIdentifier: HKQuantityTypeIdentifier.stepCount
         )
         
-        //
         let predicate: NSPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
         
-        //
         let calendar = Calendar.current
         var anchor: DateComponents = calendar.dateComponents(
             [.day, .month, .year, .hour],
@@ -90,11 +81,9 @@ extension HealthKitManager
         anchor.hour = 0
         let anchorDate = calendar.date(from: anchor)
         
-        //
         var interval: DateComponents = DateComponents()
         interval.day = 1
         
-        //
         let query = HKStatisticsCollectionQuery(
             quantityType: quantityType!,
             quantitySamplePredicate: predicate,
@@ -103,22 +92,21 @@ extension HealthKitManager
             intervalComponents: interval
         )
         
-        //
         query.initialResultsHandler = {
             query, results, error in
             
-            //
+            var stepData: [String: String] = [:]
             guard let statsCollection = results,
                       statsCollection.statistics().count > 0  // 0 if not authorize
             else
             {
+                // not authorize
                 DispatchQueue.main.async {
-                    completionHandler(false)
+                    completionHandler(false, stepData)
                 }
                 return
             }
             
-            //
             let endDate = Date()
             guard let startDate = calendar.date(byAdding: .day, value: duration, to: endDate)
             else
@@ -137,19 +125,250 @@ extension HealthKitManager
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "yyyy-MM-dd"
                     let dateString = dateFormatter.string(from: date)
-                    
-                    self.stepData[dateString] = String(lroundf(Float(count)))
+                    stepData[dateString] = String(lroundf(Float(count)))
                 }
             }
             
             DispatchQueue.main.async {
-                completionHandler(true)
+                completionHandler(true, stepData)
             }
         }
         
         self.healthStore.execute(query)
     }
-    
+}
+
+extension HealthKitManager
+{
+    static func fetchDistance(completionHandler: @escaping ([String: String]) -> ())
+    {
+        let quantityType = HKObjectType.quantityType(
+            forIdentifier: HKQuantityTypeIdentifier.distanceWalkingRunning
+        )
+        
+        let predicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
+        
+        let calendar = Calendar.current
+        var anchor = calendar.dateComponents(
+            [.day, .month, .year, .hour],
+            from: Date()
+        )
+        anchor.hour = 0
+        let anchorDate = calendar.date(from: anchor)
+        
+        var interval = DateComponents()
+        interval.day = 1
+        
+        let query = HKStatisticsCollectionQuery(
+            quantityType: quantityType!,
+            quantitySamplePredicate: predicate,
+            options: HKStatisticsOptions.cumulativeSum,
+            anchorDate: anchorDate!,
+            intervalComponents: interval
+        )
+        
+        query.initialResultsHandler = {
+            query, results, error in
+            
+            guard let statsCollection = results else {
+                return
+            }
+            
+            let endDate = Date()
+            
+            guard let startDate = calendar.date(byAdding: .day, value: -39, to: endDate) else
+            {
+                return
+            }
+            
+            var distanceData: [String: String] = [:]
+            statsCollection.enumerateStatistics(from: startDate, to: endDate)
+            {(statistic, stop) in
+                
+                if let quantity = statistic.sumQuantity()
+                {
+                    var distance = quantity.doubleValue(for: HKUnit.meter())
+                    distance = (distance * 100).rounded() / 100
+                    
+                    let date = statistic.startDate
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd"
+                    let dateString = dateFormatter.string(from: date)
+                    
+                    distanceData[dateString] = String(lroundf(Float(distance)))
+                }
+            }
+            completionHandler(distanceData)
+        }
+        self.healthStore.execute(query)
+    }
+}
+
+
+extension HealthKitManager
+{
+    static func fetchHeartRate(completionHandler: @escaping ([String: String]) -> ())
+    {
+        let quantityType = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRate)
+        
+        let calendar = Calendar.current
+        var anchor = calendar.dateComponents([.day, .month, .year, .hour], from: Date())
+        anchor.hour = 0
+        let anchorDate = calendar.date(from: anchor)
+        
+        var interval = DateComponents()
+        interval.day = 1
+        
+        //let predicate2 = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
+        
+        let query = HKStatisticsCollectionQuery(
+            quantityType: quantityType!,
+            
+            quantitySamplePredicate: nil,
+            
+            options: [HKStatisticsOptions.discreteMax, .discreteAverage, .discreteMin],
+            
+            anchorDate: anchorDate!,
+            
+            intervalComponents: interval
+        )
+        
+        query.initialResultsHandler = {
+            query, results, error in
+            
+            guard let statsCollection = results else {
+                return
+            }
+            
+            let endDate = Date()
+            
+            guard let startDate = calendar.date(byAdding: .day, value: -39, to: endDate) else
+            {
+                return
+            }
+            
+            var heartrateData: [String: String] = [:]
+            statsCollection.enumerateStatistics(from: startDate, to: endDate, with:
+                {(statistic, stop) in
+                    
+                    if let maxQquantity = statistic.maximumQuantity(), let minQuantity = statistic.minimumQuantity()
+                    {
+                        let max = maxQquantity.doubleValue(for: HKUnit(from: "count/min"))
+                        let min = minQuantity.doubleValue(for: HKUnit(from: "count/min"))
+                        
+                        let date = statistic.startDate
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let dateString = dateFormatter.string(from: date)
+                        
+                        heartrateData[dateString] = "\(String(min))-\(String(max))"
+                    }
+            })
+            
+            completionHandler(heartrateData)
+        }
+        self.healthStore.execute(query)
+    }
+}
+
+
+extension HealthKitManager
+{
+    static func updateHealthInfo(stepData: [String: String], completionHandlerAfterUpdate: @escaping (Bool) -> ())
+    {
+        let fetchTime = Date()
+        let localDateFormatter = DateFormatter()
+        localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
+        localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
+        self.fetchTimeString = localDateFormatter.string(from: fetchTime)
+        
+        let dispatchGroup = DispatchGroup()
+
+        var distanceData: [String: String] = [:]
+        dispatchGroup.enter()
+        self.fetchDistance { (distances) in
+            distanceData = distances
+            dispatchGroup.leave()
+        }
+
+        var heartrateData: [String: String] = [:]
+        dispatchGroup.enter()
+        self.fetchHeartRate { (heartrates) in
+            heartrateData = heartrates
+            dispatchGroup.leave()
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            
+            var healthModels: [String: HealthModel] = [:]
+
+            var model: HealthModel
+            
+            for (date, step) in stepData {
+
+                if let data = healthModels[date] {
+                    data.STEP = step
+                } else {
+                    model = HealthModel(date: date)
+                    model.STEP = step
+                    healthModels[date] = model
+                }
+            }
+            
+            for (date, distance) in distanceData {
+
+                if let data = healthModels[date] {
+                    data.DISTANCE = distance
+                } else {
+                    model = HealthModel(date: date)
+                    model.DISTANCE = distance
+                    healthModels[date] = model
+                }
+            }
+
+            for (date, heartrate) in heartrateData {
+
+                if let data = healthModels[date] {
+                    data.HEART_RATE = heartrate
+                } else {
+                    model = HealthModel(date: date)
+                    model.HEART_RATE = heartrate
+                    healthModels[date] = model
+                }
+            }
+
+            self.uploadDataToServer(healthModels: healthModels, completionHandlerAfterUpdate: completionHandlerAfterUpdate)
+        }
+    }
+}
+extension HealthKitManager
+{
+    private static func uploadDataToServer(healthModels: [String: HealthModel], completionHandlerAfterUpdate: @escaping (Bool) -> ())
+    {
+        for data in healthModels {
+            let _ = AppDelegate.database.insert(
+                AppDelegate.DB_TABLE_1,
+                rowInfo: [
+                    "DATE": "'\(data.value.DATE)'",
+                    "STEP": "'\(data.value.STEP)'",
+                    "FETCH_TIME": "'\(self.fetchTimeString!)'"
+                ]
+            )
+        }
+        
+        let date = Date()
+        self.fetchStepCountDetail(
+            startDate: date.addingTimeInterval(41 *  -24 * 60 * 60),
+            endDate: date.addingTimeInterval(24 * 60 * 60),
+            fetchTimeString: self.fetchTimeString!,
+            completionHandler: completionHandlerAfterUpdate
+        )
+    }
+}
+
+extension HealthKitManager
+{
     static func fetchStepCountDetail(startDate: Date, endDate: Date, fetchTimeString: String, completionHandler: @escaping (Bool) -> ()) {
         
         let type = HKSampleType.quantityType(
@@ -162,18 +381,18 @@ extension HealthKitManager
             if (results?.count)! > 0 {
                 
                 for result in results as! [HKQuantitySample] {
-                    
+
                     let localDateFormatter = DateFormatter()
                     localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
                     localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
                     localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
                     let date = localDateFormatter.string(from: result.endDate)
                     let count = result.quantity.doubleValue(for: HKUnit.count())
-
+                    
                     let device = result.device
                     let hardwareVersion = device?.hardwareVersion ?? "N/A"
                     let softwareVersion = device?.softwareVersion ?? "N/A"
-
+                    
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_2,
                         rowInfo: [
@@ -188,8 +407,7 @@ extension HealthKitManager
                 }
             }
             
-            DispatchQueue.main.async
-            {
+            DispatchQueue.main.async {
                 completionHandler(true)
             }
         }
@@ -200,7 +418,7 @@ extension HealthKitManager
 
 extension HealthKitManager
 {
-    static func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void)
+    static func askAuthorizeHealthKit(askAuthorizeCompletion: @escaping () -> Void)
     {
         let stepCount = HKObjectType.quantityType(forIdentifier: .stepCount)!
         let healthInfoToRead: Set<HKObjectType> = [
@@ -213,261 +431,18 @@ extension HealthKitManager
         
         self.healthStore.requestAuthorization(toShare: healthInfoToWrite, read: healthInfoToRead)
         { (success, error) in
-            
+
             // success here only means that iOS successfully asked the user about health kit access
             UserDefaults.standard.set(true, forKey: "isHealthKitAccessAsked")
             
-            self.isHealthInfoAuthorized({ (isAuthorized) in
-                completion(isAuthorized, nil)
-            })
-        }
-    }
-    
-    static func isHealthInfoAuthorized(_ completionHandler: @escaping (Bool) -> ())
-    {
-        self.fetchStepCount(duration: -1, completionHandler: completionHandler)
-    }
-}
-
-extension HealthKitManager
-{
-    static func fetchDistance(completionHandler: @escaping () -> ())
-    {
-        //
-        let quantityType = HKObjectType.quantityType(
-            forIdentifier: HKQuantityTypeIdentifier.distanceWalkingRunning
-        )
-        
-        //
-        let predicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
-        
-        //
-        let calendar = Calendar.current
-        var anchor = calendar.dateComponents(
-            [.day, .month, .year, .hour],
-            from: Date()
-        )
-        anchor.hour = 0
-        let anchorDate = calendar.date(from: anchor)
-        
-        //
-        var interval = DateComponents()
-        interval.day = 1
-        
-        //
-        let query = HKStatisticsCollectionQuery(
-            quantityType: quantityType!,
-            quantitySamplePredicate: predicate,
-            options: HKStatisticsOptions.cumulativeSum,
-            anchorDate: anchorDate!,
-            intervalComponents: interval
-        )
-        
-        // Set the results handler
-        query.initialResultsHandler = {
-            query, results, error in
-            
-            guard let statsCollection = results else {
-                return
-            }
-            
-            let endDate = Date()
-            
-            guard let startDate = calendar.date(byAdding: .day, value: -39, to: endDate) else
-            {
-                return
-            }
-            
-            statsCollection.enumerateStatistics(from: startDate, to: endDate)
-            {(statistic, stop) in
-                
-                if let quantity = statistic.sumQuantity()
-                {
-                    var distance = quantity.doubleValue(for: HKUnit.meter())
-                    distance = (distance * 100).rounded() / 100
-                    
-                    let date = statistic.startDate
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd"
-                    let dateString = dateFormatter.string(from: date)
-                    
-                    self.distanceData[dateString] = String(lroundf(Float(distance)))
-                }
-            }
-            completionHandler()
-        }
-        self.healthStore.execute(query)
-    }
-}
-
-extension HealthKitManager
-{
-    static func fetchHeartRate(completionHandler: @escaping () -> ())
-    {
-        //
-        let quantityType = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRate)
-        
-        //
-        let calendar = Calendar.current
-        var anchor = calendar.dateComponents([.day, .month, .year, .hour], from: Date())
-        anchor.hour = 0
-        let anchorDate = calendar.date(from: anchor)
-        
-        //
-        var interval = DateComponents()
-        interval.day = 1
-        
-        //
-        //let predicate2 = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
-        
-        //
-        let query = HKStatisticsCollectionQuery(
-            quantityType: quantityType!,
-            
-            quantitySamplePredicate: nil,
-            
-            options: [HKStatisticsOptions.discreteMax, .discreteAverage, .discreteMin],
-            
-            anchorDate: anchorDate!,
-            
-            intervalComponents: interval
-        )
-        
-        // Set the results handler
-        query.initialResultsHandler = {
-            query, results, error in
-            
-            guard let statsCollection = results else {
-                return
-            }
-            
-            let endDate = Date()
-            
-            guard let startDate = calendar.date(byAdding: .day, value: -39, to: endDate) else
-            {
-                return
-            }
-            
-            statsCollection.enumerateStatistics(from: startDate, to: endDate, with:
-                {(statistic, stop) in
-                    
-                    if let maxQquantity = statistic.maximumQuantity(), let minQuantity = statistic.minimumQuantity()
-                    {
-                        let max = maxQquantity.doubleValue(for: HKUnit(from: "count/min"))
-                        let min = minQuantity.doubleValue(for: HKUnit(from: "count/min"))
-                        
-                        let date = statistic.startDate
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateFormat = "yyyy-MM-dd"
-                        let dateString = dateFormatter.string(from: date)
-                        
-                        self.heartrateData[dateString] = "\(String(min))-\(String(max))"
-                    }
-            })
-            
-            completionHandler()
-        }
-        self.healthStore.execute(query)
-    }
-}
-
-extension HealthKitManager
-{
-    static func updateHealthInfo(_ completionHandler: @escaping (Bool) -> ())
-    {
-        let fetchTime = Date()
-        let localDateFormatter = DateFormatter()
-        localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")
-        localDateFormatter.timeZone = TimeZone(identifier: "Asia/Taipei")
-        self.fetchTimeString = localDateFormatter.string(from: fetchTime)
-        
-        
-        let dispatchGroup = DispatchGroup()
-
-        dispatchGroup.enter()
-        self.fetchStepCount(duration: -39) {_ in
-            dispatchGroup.leave()
-        }
-        
-        dispatchGroup.enter()
-        self.fetchDistance {
-            dispatchGroup.leave()
-        }
-        
-        dispatchGroup.enter()
-        self.fetchHeartRate {
-            dispatchGroup.leave()
-        }
-        
-        
-        dispatchGroup.notify(queue: .main) {
-
-            self.healthModels = [:]
-            var model: HealthModel
-            
-            for (date, step) in self.stepData {
-                
-                if let data = self.healthModels[date] {
-                    data.STEP = step
-                } else {
-                    model = HealthModel(date: date)
-                    model.STEP = step
-                    self.healthModels[date] = model
-                }
-            }
-            
-            for (date, distance) in self.distanceData {
-                
-                if let data = self.healthModels[date] {
-                    data.DISTANCE = distance
-                } else {
-                    model = HealthModel(date: date)
-                    model.DISTANCE = distance
-                    self.healthModels[date] = model
-                }
-            }
-            
-            for (date, heartrate) in self.heartrateData {
-                
-                if let data = self.healthModels[date] {
-                    data.HEART_RATE = heartrate
-                } else {
-                    model = HealthModel(date: date)
-                    model.HEART_RATE = heartrate
-                    self.healthModels[date] = model
-                }
-            }
-
-            self.uploadDataToServer(completionHandler)
+            askAuthorizeCompletion()
         }
     }
 }
 
-extension HealthKitManager
-{
-    private static func uploadDataToServer(_ completionHandler: @escaping (Bool) -> ())
-    {
-        for data in self.healthModels {
-            let _ = AppDelegate.database.insert(
-                AppDelegate.DB_TABLE_1,
-                rowInfo: [
-                    "DATE": "'\(data.value.DATE)'",
-                    "STEP": "'\(data.value.STEP)'",
-                    "FETCH_TIME": "'\(self.fetchTimeString!)'"
-                ]
-            )
-        }
-        
-        let date = Date()
-        self.fetchStepCountDetail(
-            startDate: date.addingTimeInterval(40 *  -24 * 60 * 60),
-            endDate: date.addingTimeInterval(24 * 60 * 60),
-            fetchTimeString: self.fetchTimeString!,
-            completionHandler: completionHandler
-        )
-    }
-}
+
+
+
 
 
 

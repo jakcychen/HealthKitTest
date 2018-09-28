@@ -28,38 +28,31 @@ class FetchVC: UIViewController {
         )
         
         let buildNumber = Bundle.main.infoDictionary!["CFBundleVersion"]
-        self.versioinLabel.text = buildNumber as! String
-    }
-    
-    @objc func appBecomeActive() {
-
-        HealthKitManager.isHealthInfoAuthorized {
-            (isBinded) in
-            
-            if !isBinded {
-                self.disableFetching()
-                return
-            }
-            
-            self.enableFetching()
-        }
+        self.versioinLabel.text = buildNumber as? String
     }
     
     func disableFetching() {
+        
+        self.authButton.setTitle("Auth", for: .normal)
         self.authButton.isEnabled = true
         self.authButton.backgroundColor = self.view.tintColor
+        
         self.fetchButton.isEnabled = false
         self.fetchButton.backgroundColor = UIColor.gray
     }
     
     func enableFetching() {
+        
         self.authButton.setTitle("Authorized", for: .normal)
         self.authButton.isEnabled = false
         self.authButton.backgroundColor = UIColor.gray
+        
         self.fetchButton.isEnabled = true
         self.fetchButton.backgroundColor = self.view.tintColor
     }
+
     
+    // simulate authorize in tutorial view
     @IBAction func auth(_ sender: Any) {
         
         if UserDefaults.standard.bool(forKey: "isHealthKitAccessAsked") {
@@ -86,40 +79,63 @@ class FetchVC: UIViewController {
             return
         }
         
-        HealthKitManager.authorizeHealthKit { (authorized, error) in
+        HealthKitManager.askAuthorizeHealthKit {
             
-            if !authorized  {
-                self.disableFetching()
+            self.fetch(sender)
+        }
+    }
+    
+    // simulate health event button pressed
+    @objc func appBecomeActive() {
+        
+        HealthKitManager.fetchStepCount(duration: -1) { (isAuthorized, _) in
+
+            if !isAuthorized {
+                DispatchQueue.main.async {
+                    self.disableFetching()
+                }
                 return
             }
-            self.enableFetching()
+            DispatchQueue.main.async {
+                self.enableFetching()
+            }
+            
         }
     }
 
+    // simulate update after sign in success and more tab
     @IBAction func fetch(_ sender: Any) {
         
-        self.fetchButton.setTitle("fetching in progress", for: .normal)
-        self.fetchingIndicator.startAnimating()
-        self.view.window?.addSubview(self.fetchingView)
+        DispatchQueue.main.async {
+            self.fetchingIndicator.startAnimating()
+            self.view.window?.addSubview(self.fetchingView)
+        }
         
-        HealthKitManager.authorizeHealthKit { (authorized, error) in
+        HealthKitManager.fetchStepCount(duration: -39) { (isAuthorized, stepData) in
             
-            if !authorized  {
-                return
-            }
-            
-            HealthKitManager.updateHealthInfo { (success) in
-                
-                if !success {
-                    return
-                }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    self.fetchButton.setTitle("fetch", for: .normal)
+            if !isAuthorized {
+                // if 未授權 ....
+                print("未授權")
+                DispatchQueue.main.async {
+                    self.disableFetching()
                     self.fetchingIndicator.stopAnimating()
                     self.fetchingView.removeFromSuperview()
                 }
+                return
             }
+            
+            HealthKitManager.updateHealthInfo(stepData: stepData, completionHandlerAfterUpdate: { (updateSuccess) in
+            
+                guard updateSuccess else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    self.enableFetching()
+                    self.fetchingIndicator.stopAnimating()
+                    self.fetchingView.removeFromSuperview()
+                }
+            })
         }
     }
 }
