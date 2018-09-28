@@ -171,16 +171,18 @@ extension HealthKitManager
                     let count = result.quantity.doubleValue(for: HKUnit.count())
 
                     let device = result.device
-                    
+                    let hardwareVersion = device?.hardwareVersion ?? "N/A"
+                    let softwareVersion = device?.softwareVersion ?? "N/A"
+
                     let _ = AppDelegate.database.insert(
                         AppDelegate.DB_TABLE_2,
                         rowInfo: [
                             "DATE": "'\(date)'",
                             "STEP": String(Int(count)),
                             "FETCH_TIME": "'\(fetchTimeString)'",
-                            "HARD_WARE_VERSION": "'\(device?.hardwareVersion! ?? "N/A")'",
-                            "SOFT_WARE_VERSION": "'\(device?.softwareVersion! ?? "N/A")'",
-                            "PRODUCT_NAME": "'\(productName[(device?.hardwareVersion)!] ?? "N/A")'"
+                            "HARD_WARE_VERSION": "'\(hardwareVersion)'",
+                            "SOFT_WARE_VERSION": "'\(softwareVersion)'",
+                            "PRODUCT_NAME": "'\(productName[hardwareVersion] ?? "N/A")'"
                         ]
                     )
                 }
