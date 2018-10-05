@@ -71,8 +71,6 @@ extension HealthKitManager
             forIdentifier: HKQuantityTypeIdentifier.stepCount
         )
         
-        let predicate: NSPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
-        
         let calendar = Calendar.current
         var anchor: DateComponents = calendar.dateComponents(
             [.day, .month, .year, .hour],
@@ -83,58 +81,87 @@ extension HealthKitManager
         
         var interval: DateComponents = DateComponents()
         interval.day = 1
-        
-        let query = HKStatisticsCollectionQuery(
-            quantityType: quantityType!,
-            quantitySamplePredicate: predicate,
-            options: [HKStatisticsOptions.cumulativeSum],
-            anchorDate: anchorDate!,
-            intervalComponents: interval
-        )
-        
-        query.initialResultsHandler = {
-            query, results, error in
-            
-            var stepData: [String: String] = [:]
-            guard let statsCollection = results,
-                      statsCollection.statistics().count > 0  // 0 if not authorize
-            else
-            {
-                // not authorize
-                DispatchQueue.main.async {
-                    completionHandler(false, stepData)
-                }
-                return
-            }
-            
-            let endDate = Date()
-            guard let startDate = calendar.date(byAdding: .day, value: duration, to: endDate)
-            else
-            {
-                return
-            }
-            
-            statsCollection.enumerateStatistics(from: startDate, to: endDate)
-            {(statistic, stop) in
 
-                if let quantity = statistic.sumQuantity()
+        
+        // query source to create predicate
+        let validateSource: NSMutableSet = NSMutableSet()
+        let dispatchGroup = DispatchGroup()
+        dispatchGroup.enter()
+        let sourceQuery = HKSourceQuery(sampleType: quantityType!, samplePredicate: nil) { (query, sources, error) in
+            if sources == nil {
+                return
+            }
+            for source in sources! {
+                if source.name != "捷徑" {
+                    validateSource.add(source)
+                }
+            }
+            dispatchGroup.leave()
+        }
+        self.healthStore.execute(sourceQuery)
+        
+        
+        //
+        dispatchGroup.notify(queue: .main) {
+
+            let predicate1: NSPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered)
+            let predicate2 = NSPredicate(format: "%K IN %@", HKPredicateKeyPathSource, validateSource)
+            //let predicate2 = NSPredicate(format: "sourceRevision.source.name == %@", "捷徑")  // crash, not support keypath
+            //let predicate2 = NSPredicate(format: "%K != %@", HKPredicateKeyPathSource, HKSource.default())  // can't create customize source
+            let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate1, predicate2])
+            
+            let query = HKStatisticsCollectionQuery(
+                quantityType: quantityType!,
+                quantitySamplePredicate: compoundPredicate,
+                options: [HKStatisticsOptions.cumulativeSum],
+                anchorDate: anchorDate!,
+                intervalComponents: interval
+            )
+            
+            query.initialResultsHandler = {
+                query, results, error in
+                
+                var stepData: [String: String] = [:]
+                guard let statsCollection = results,
+                    statsCollection.statistics().count > 0  // 0 if not authorize
+                    else
                 {
-                    let count = quantity.doubleValue(for: HKUnit.count())
+                    // not authorize
+                    DispatchQueue.main.async {
+                        completionHandler(false, stepData)
+                    }
+                    return
+                }
+                
+                let endDate = Date()
+                guard let startDate = calendar.date(byAdding: .day, value: duration, to: endDate)
+                    else
+                {
+                    return
+                }
+                
+                statsCollection.enumerateStatistics(from: startDate, to: endDate)
+                {(statistic, stop) in
                     
-                    let date = statistic.startDate
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd"
-                    let dateString = dateFormatter.string(from: date)
-                    stepData[dateString] = String(lroundf(Float(count)))
+                    if let quantity = statistic.sumQuantity()
+                    {
+                        let count = quantity.doubleValue(for: HKUnit.count())
+                        
+                        let date = statistic.startDate
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let dateString = dateFormatter.string(from: date)
+                        stepData[dateString] = String(lroundf(Float(count)))
+                    }
+                }
+                
+                DispatchQueue.main.async {
+                    completionHandler(true, stepData)
                 }
             }
             
-            DispatchQueue.main.async {
-                completionHandler(true, stepData)
-            }
+            self.healthStore.execute(query)
         }
-        
-        self.healthStore.execute(query)
     }
 }
 
@@ -382,6 +409,10 @@ extension HealthKitManager
                 
                 for result in results as! [HKQuantitySample] {
 
+                    //print(result.sourceRevision.source.bundleIdentifier)
+                    //print(result.sourceRevision.source.name)
+                    
+                    
                     let localDateFormatter = DateFormatter()
                     localDateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
                     localDateFormatter.locale = Locale(identifier: "zh_Hant_TW")

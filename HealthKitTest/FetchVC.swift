@@ -99,7 +99,6 @@ class FetchVC: UIViewController {
             DispatchQueue.main.async {
                 self.enableFetching()
             }
-            
         }
     }
 
