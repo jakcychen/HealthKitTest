@@ -92,7 +92,7 @@ extension HealthKitManager
                 return
             }
             for source in sources! {
-                if source.name != "捷徑" {
+                if source.bundleIdentifier != "is.workflow.my.app" {
                     validateSource.add(source)
                 }
             }
